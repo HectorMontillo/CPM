@@ -58,6 +58,7 @@ class Proyecto():
             self.agregarnodored(actividad,nodos[j-1])
     
     def DibujarRed(self):
+        #self.Cpm('m')
         edges = self.redcpm.edges()
         pos = nx.shell_layout(self.redcpm)
         edge_labels=dict([((u,v,),d['weight'])
@@ -74,16 +75,19 @@ class Proyecto():
         for edge in nombres:
             colors.append('g' if edge in self.rutacritica else 'black')
             weights.append( 3 if edge in self.rutacritica else 1)
-        print(colors)
         nx.draw_networkx_nodes(self.redcpm,pos,node_color=colornodos, node_size=weightnodo)
         nx.draw_networkx_labels(self.redcpm,pos)
         nx.draw_networkx_edges(self.redcpm,pos,edge_color=colors, width=weights)
         nx.draw_networkx_edge_labels(self.redcpm,pos, edge_labels=edge_labels, )
+        print("Graficando Red...")
         plt.show()
+        print("Grafico cerrado...")
 
     def Cpm(self, tiempo):
         nodos = list(self.redcpm.nodes().data())
         edges = list(self.redcpm.edges().data())
+        for nodo in nodos:
+            nodo[1]['data'].tiempomastemprano = 0
         for edge in edges:
             nodo1 = nodos[edge[1]][1]['data'] 
             nodo0 = nodos[edge[0]][1]['data']
@@ -98,9 +102,9 @@ class Proyecto():
             if nodo1.tiempomastemprano < nodo0.tiempomastemprano+edgeval:
                 nodo1.tiempomastemprano = nodo0.tiempomastemprano+edgeval
         
-        #nodos.reverse()
+
         edges.reverse()
-        #print(edges)
+        
         nodos[-1][1]['data'].nodocritico = True
         self.rutacriticanodos.add(nodos[-1][1]['data'].id)
         for nodo in nodos:
@@ -118,14 +122,32 @@ class Proyecto():
                 edgeval = edge[2]['weight'].duracion_m
             
             if nodo1.tiempomastardio > nodo0.tiempomastardio-edgeval:
-                #print(str(edgeval)+" "+str(nodo0.tiempomastardio))
                 nodo1.tiempomastardio = nodo0.tiempomastardio-edgeval
                 if nodo1.tiempomastardio==nodo1.tiempomastemprano:
                     nodo1.nodocritico = True
                     self.rutacritica.add(edge[2]['weight'].nombre)
                     self.rutacriticanodos.add(nodo1.id)
+    def BuscarActividad(self,nombres):
+        nombreslist = nombres.split()
+        print(str(nombreslist)+"-----------------------------")
+        actlist = []
+        
+        actividadesnombres = [act.nombre for act in self.actividades]
+        for nombre in nombreslist:
+            if not (nombre in actividadesnombres):
+                 return "ERROR"
+        for act in self.actividades:
+            if act.nombre in nombreslist:
+                actlist.append(act)
 
-        print("----------------------------------------------")
+        print("Predecesoras encontradas :"+str(actlist))
+        return actlist
+
+    def DuracionProyecto(self):
+        return self.redcpm.nodes().data()[self.indexnodes]['data'].tiempomastardio
+
+    
+
         
         
         
@@ -143,7 +165,7 @@ class Actividad():
         self.nodofinalizacion = None
         # a <= m <= b
     def __str__(self):
-        return str(self.nombre)+" : "+str(self.duracion_m)
+        return str(self.nombre)+" : "+str(self.duracion_m)+ " : "+str(list(act.nombre for act in self.predecesoras))
 
 #Clase para los nodos de la red cpm
 class Cpmnode():
@@ -167,17 +189,18 @@ if __name__=="__main__":
     print(proyecto.agregaractividad("D",7,[proyecto.actividades[0],proyecto.actividades[1]]))
     print(proyecto.agregaractividad("E",10,[proyecto.actividades[3]]))
     print(proyecto.agregaractividad("F",12,[proyecto.actividades[2],proyecto.actividades[4]]))
-    '''
+    
     print(proyecto.agregaractividad("G",14,[proyecto.actividades[2],proyecto.actividades[4]]))
     print(proyecto.agregaractividad("H",15,[proyecto.actividades[6],proyecto.actividades[5]]))
     print(proyecto.agregaractividad("I",10,[proyecto.actividades[7]]))
     print(proyecto.agregaractividad("J",12,[]))
     print(proyecto.agregaractividad("K",15,[proyecto.actividades[8],proyecto.actividades[9]]))
-    '''
+    
     proyecto.Cpm('m')
     for node in proyecto.redcpm.nodes().data():
         print(str(node[1]['data'].tiempomastemprano)+" :" +str(node[1]['data'].tiempomastardio)+" "+str(node[1]['data'].nodocritico))
-    print(list(proyecto.rutacritica).reverse)
+    print(list(proyecto.rutacritica).reverse())
+    print(proyecto.DuracionProyecto())
     '''
     print(list(proyecto.redcpm.nodes().data()))
     print(list(proyecto.redcpm.edges().data()))
