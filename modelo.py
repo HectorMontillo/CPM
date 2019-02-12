@@ -84,8 +84,11 @@ class Proyecto():
         print("Grafico cerrado...")
 
     def Cpm(self, tiempo):
+        self.rutacritica = set()
+        self.rutacriticanodos = set()
         nodos = list(self.redcpm.nodes().data())
         edges = list(self.redcpm.edges().data())
+        mayor = 0
         for nodo in nodos:
             nodo[1]['data'].tiempomastemprano = 0
         for edge in edges:
@@ -101,9 +104,28 @@ class Proyecto():
 
             if nodo1.tiempomastemprano < nodo0.tiempomastemprano+edgeval:
                 nodo1.tiempomastemprano = nodo0.tiempomastemprano+edgeval
+                if mayor < nodo1.tiempomastemprano:
+                    mayor = nodo1.tiempomastemprano
         
-
         edges.reverse()
+        '''
+        newedges=list()
+        for nodo in nodos:
+            if nodo[1]['data'].tiempomastemprano == mayor:
+                nodo[1]['data'].nodocritico = True
+                self.rutacriticanodos.add(nodo[1]['data'].id)
+                for edge in edges:
+                    if edge[1] == nodo[1]['data'].id:
+                        newedges.append(edge)
+        
+        for edge in newedges:
+            edges.remove(edge)
+        
+        newedges.extend(edges)
+        print(newedges)
+        '''
+
+        
         
         nodos[-1][1]['data'].nodocritico = True
         self.rutacriticanodos.add(nodos[-1][1]['data'].id)
